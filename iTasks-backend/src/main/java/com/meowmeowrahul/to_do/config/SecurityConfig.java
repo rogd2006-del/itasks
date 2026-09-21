@@ -31,7 +31,7 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value("${frontend.url}")
+    @Value("${frontend.url:http://localhost:5173}")
     private String frontendURL;
 
     @Autowired
@@ -46,7 +46,20 @@ public class SecurityConfig {
                 .cors(cors -> cors
                         .configurationSource(request -> {
                             var corsConfig = new org.springframework.web.cors.CorsConfiguration();
-                            corsConfig.setAllowedOrigins(List.of(frontendURL));
+                            java.util.List<String> origins = new java.util.ArrayList<>();
+                            if (frontendURL != null && !frontendURL.isBlank()) {
+                                String clean = frontendURL.trim();
+                                origins.add(clean);
+                                if (clean.endsWith("/")) {
+                                    origins.add(clean.substring(0, clean.length() - 1));
+                                } else {
+                                    origins.add(clean + "/");
+                                }
+                            }
+                            origins.add("http://localhost:5173");
+                            origins.add("http://localhost:3000");
+
+                            corsConfig.setAllowedOrigins(origins);
                             corsConfig.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
                             corsConfig.setAllowedHeaders(List.of("*"));
                             corsConfig.setAllowCredentials(true);
